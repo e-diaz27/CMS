@@ -70,14 +70,14 @@ const viewAllEmployees = () => {
 const viewAllRoles = () => {
     connection.query(`
     SELECT
+        role.id,
         role.title,
         role.salary,
-        employee.role_id AS role_id,
         department.name AS department
     FROM role
-
+        LEFT JOIN department on role.department_id = department.id 
     `, (err, data) => {
-        console.log("\n");
+        console.log(err);
         console.table(data);
         start()
     })
@@ -164,12 +164,13 @@ const addDepartment = () => {
 }
 
 const updateEmployeeRole = () => {
-    
+    connection.query(`SELECT * FROM employee`, (err, employees) => {
         inquirer.prompt([
             {
-                type: "input",
+                type: "list",
                 name: "employee_id",
-                message: "input id for employee to update",
+                message: "select employee to update",
+                choices: employees.map(employee => ({name:`${employee.first_name} ${employee.last_name}`, value: employee.id}))
             },
             {
                 type: "input",
@@ -178,12 +179,14 @@ const updateEmployeeRole = () => {
             },
         ]).then((answers) => {
             connection.query("UPDATE employee SET employee.role_id = ? WHERE employee.id = ?", 
-            [answers.role_id, answers.employee.id], (err, data) => {
+            [answers.role_id, answers.employee_id], (err, data) => {
                 if (err) {console.log("error, please reference database for valid ids.")
                 } else {console.log("employee updated successfully")}
                 start()
             })
         })
+
+    })
 }
 
 start();
